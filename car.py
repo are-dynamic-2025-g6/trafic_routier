@@ -1,5 +1,6 @@
 CAR_SIZE = 20
 
+
 from math import sqrt
 
 class Car:

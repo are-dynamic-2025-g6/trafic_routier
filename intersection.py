@@ -1,5 +1,6 @@
 INTERSECTION_SIZE = 10
 
+from car import Car
 
 PRIORITY_STOP = 0
 PRIORITY_LET = 1
@@ -18,15 +19,25 @@ class Intersection:
 	def __init__(self, x, y):
 		self.x = x
 		self.y = y
-		self.prios: list[Priority] = []
+		self.prios: list[list[Priority]] = []
 		self.carWaitingFor: list[Car] = [] # cars trying to go on the intersection
 		self.directions: list[Intersection] = [] # intersections towards we can go
 		self.received: list[Intersection] = [] # intersections 
 
+
+	def getCarDirectionIndex(self, intersection):
+		for i in range(len(self.directions)):
+			if self.directions[i] == intersection:
+				return i
+		
+		return -1
 	
-	def getPrio(self, a, b):
-		return a
-	
+	def getCarReceivedIndex(self, intersection):
+		for i in range(len(self.received)):
+			if self.received[i] == intersection:
+				return i
+		
+		return -1
 
 
 

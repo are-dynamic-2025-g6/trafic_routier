@@ -3,6 +3,7 @@
 import pygame
 
 from data import *
+from priority import *
 
 def runLap():
 	for i in cars:
@@ -10,6 +11,11 @@ def runLap():
 		i.move()	
 
 	return None
+
+
+
+# print(getPriority(cars[0], 0))
+
 
 
 def drawGame():

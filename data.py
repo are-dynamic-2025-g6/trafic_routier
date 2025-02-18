@@ -11,7 +11,9 @@ intersections: list[Intersection] = [
     Intersection(600, 200),
 ]
 
-cars: list[Car] = [Car(intersections[0], intersections[1])]
+cars: list[Car] = [
+    Car(intersections[4], intersections[3])
+]
 
 
 
