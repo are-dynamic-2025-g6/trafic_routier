@@ -2,18 +2,14 @@
 
 import pygame
 
-# import filesp
-from intersection import *
-from car import *
+from data import *
+
+def run_lap():
 
 
-intersections = [Intersection(20, 20)]
-
-cars = [Car(800, 450, intersections[0])]
+	return None
 
 
-
-x = Intersection(10, 20)
 
 pygame.init()
 screen = pygame.display.set_mode((1000, 400))
@@ -32,6 +28,10 @@ while running:
 
 
 	pygame.display.flip()  # Mettre à jour l'affichage
+
+	run_lap()
+
+
 
 pygame.quit()
 
