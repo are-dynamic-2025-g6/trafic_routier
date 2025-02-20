@@ -8,7 +8,13 @@ class Priority:
 
 
 
+def getDirectionsToCheck(car: Car):
+	aim: Intersection = car.aim
+	origin = car.origin
 	
+    # search origin 
+
+
 
 
 

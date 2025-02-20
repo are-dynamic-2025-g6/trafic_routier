@@ -33,4 +33,3 @@ class Intersection:
 		
 		return -1
 
-
