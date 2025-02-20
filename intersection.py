@@ -9,12 +9,6 @@ PRIORITY_PASS = 2
 Intersection_idGenerator = 0
 
 
-class Priority:
-	def __init__(self, receivedIndex: int, priorityState: int):
-		self.receivedIndex = receivedIndex
-		self.priorityState = priorityState
-
-
 class Intersection:
 	def __init__(self, x, y):
 		self.x = x
@@ -38,6 +32,5 @@ class Intersection:
 				return i
 		
 		return -1
-
 
 

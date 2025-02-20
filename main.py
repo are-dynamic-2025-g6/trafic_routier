@@ -14,7 +14,6 @@ def runLap():
 
 
 
-# print(getPriority(cars[0], 0))
 
 
 
