@@ -1,0 +1,16 @@
+Fonctionnement des priorités :
+- ChangeRoad() !!!
+- Liste des voitures dans les intersections
+
+
+Vitesse:
+- Intersection_getMaxTurnSpeed
+- Freinage progressif => éviter de faire trop freiner ceux derriere
+
+
+
+Pathfinding:
+- définir nextTarget dans Car_frame()
+
+
+

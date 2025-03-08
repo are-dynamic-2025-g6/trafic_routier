@@ -3,12 +3,17 @@
 import pygame
 
 from data import *
-from priority import *
+
+from methods import Car_getNextPriority
+from methods import Car_frame
 
 def runLap():
-	for i in cars:
-		i.accelerate()
-		i.move()	
+	for car in cars:
+		if not car.alive: # for debug
+			continue
+
+		Car_frame(car, intersections[3])
+		car.move() # called every frame (because a car can't stop instantly)
 
 	return None
 
@@ -52,7 +57,7 @@ def drawGame():
 	
 	# draw roads (red)
 	for i in intersections:
-		for d in i.directions:
+		for d in i.targets:
 			drawArrow((255, 0, 63), (i.x, i.y), (d.x, d.y))
 	
 	# draw intersections (purple)
@@ -64,7 +69,9 @@ def drawGame():
 	# draw cars (green)
 	for car in cars:
 		x, y = car.getCoord()
-		pygame.draw.rect(screen, (0, 255, 127), (x - CAR_SIZE/2, y - CAR_SIZE/2, CAR_SIZE, CAR_SIZE))
+
+		color = (0, 255, 127) if car.alive else (127, 127, 127)
+		pygame.draw.rect(screen, color, (x - CAR_SIZE/2, y - CAR_SIZE/2, CAR_SIZE, CAR_SIZE))
 
 
 

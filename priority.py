@@ -1,18 +1,24 @@
 from car import Car
 from intersection import Intersection
 
+# Priority means: I can go to $targetIndex,
+# but I have to be carful about $waitFor intersections
+
+
 class Priority:
-	def __init__(self, receivedIndex: int, waitFor: list[int]):
-		self.receivedIndex = receivedIndex # read in received list
+	UNDEFINED = -1
+	FORBIDDEN = 0
+	STOP = 1
+	LET = 2
+	PASS = 3
+
+	def __init__(self, targetIndex: int, turnDist: float, waitFor: list[int]):
+		self.targetIndex = targetIndex # read in origin list
+		self.turnDist = turnDist
 		self.waitFor = waitFor # read in direction list
 
 
 
-def getDirectionsToCheck(car: Car):
-	aim: Intersection = car.aim
-	origin = car.origin
-	
-    # search origin 
 
 
 
