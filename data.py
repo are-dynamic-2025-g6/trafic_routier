@@ -3,16 +3,23 @@ from car import *
 
 
 intersections: list[Intersection] = [
-	Intersection(400, 250), # center(0)
-	Intersection(600, 300), # right(1)
-	Intersection(400, 100), # top(2)
-	Intersection(200, 200), # left(3)
-	Intersection(400, 400), # bottom(4)
+	Intersection(300, 150), # center(0)
+	Intersection(570, 250), # right(1)
+	Intersection(200, 50), # top(2)
+	Intersection(50, 200), # left(3)
+	Intersection(200, 400), # bottom(4)
 ]
 
 cars: list[Car] = [
-	Car(intersections[4], intersections[0])
+	Car(25, .1, intersections[1], intersections[0]),
+    
+	Car(20, .1, intersections[4], intersections[0]),
+    Car(15, .1, intersections[4], intersections[0]),
 ]
+
+# cars[0].dist = 100
+cars[2].dist = 70
+cars[1].speed = 2
 
 from priority import Priority
 

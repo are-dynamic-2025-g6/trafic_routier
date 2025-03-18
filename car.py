@@ -1,30 +1,56 @@
 CAR_SIZE = 20
 
 from Q_rsqrt import Q_rsqrt
-
+from math import log
 
 class Car:
-	STANDARD_MAX_SPEED = .8
+	STANDARD_MAX_SPEED = 4
 	FRICTION_FACTOR = .176 / 1000
+	TURN_BRAKING_TICK_DURATION = 30
+	MAX_ACCELERATION = .08
+	MAX_DECELERATION = .5
 	
-	def __init__(self, origin, target):
+	id=0
+
+	def __init__(self, size: int, reachSpeedFactor: float, origin, target):
 		self.origin = origin
 		self.target = target 
 		self.dist = 0.0
 		self.alive = True
+		self.nextPriority = None
+		self.id = Car.id
+		self.size = size
+		Car.id += 1
 
-		self.speed = 0.0
-		self.maxSpeed = Car.STANDARD_MAX_SPEED
+		self.reachSpeedFactor = reachSpeedFactor
+
+		self.keptCheckDist = -1.0
+
+		self.speed: float = 0
+		self.speedLimit = Car.STANDARD_MAX_SPEED
+		self.approchingTurnSpeed: float = -1
 
 		# add car to target list
 		target.carsApproching.append(self)
 
 
-	def accelerate(self):
-		self.speed += .01
-		if self.speed > self.maxSpeed:
-			self.speed = self.maxSpeed
+	def reachSpeed(self, aimSpeed):
+		val = self.reachSpeedFactor * (aimSpeed - self.speed)
+		if val > Car.MAX_ACCELERATION:
+			val = Car.MAX_ACCELERATION
+		elif val < -Car.MAX_DECELERATION:
+			val = -Car.MAX_DECELERATION
+	
+		self.speed += val
 
+
+	def getSafetyDist(self):
+		s = self.speed
+
+		if s <= 0:
+			return 0
+		
+		return 4 * s * s / self.reachSpeedFactor
 
 
 	def move(self):
@@ -40,7 +66,9 @@ class Car:
 			self.origin.x + dx*r,
 			self.origin.y + dy*r
 		)
-		
 
 
-
+class CarInFront:
+	def __init__(self, car: Car, dist: float):
+		self.car = car
+		self.dist = dist

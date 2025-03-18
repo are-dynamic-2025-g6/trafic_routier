@@ -1,16 +1,16 @@
-Fonctionnement des priorités :
-- ChangeRoad() !!!
-- Liste des voitures dans les intersections
-
-
-Vitesse:
+- Passer si la voiture à laisser passer est trop loin (! waitFor (methods:132) is not sorted)
 - Intersection_getMaxTurnSpeed
-- Freinage progressif => éviter de faire trop freiner ceux derriere
+- SpeedLimit => provient des priorités?
 
 
 
 Pathfinding:
-- définir nextTarget dans Car_frame()
+- définir le taux de bouchon sur une route
+- OBJECTIF FINAL: définir nextTarget dans Car_frame()
 
 
 
+
+
+Opti:
+- appels à getCarInFront
