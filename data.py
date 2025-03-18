@@ -1,5 +1,6 @@
 from intersection import *
 from car import *
+from findPath import findPath
 
 
 intersections: list[Intersection] = [
@@ -8,18 +9,13 @@ intersections: list[Intersection] = [
 	Intersection(200, 50), # top(2)
 	Intersection(50, 200), # left(3)
 	Intersection(200, 400), # bottom(4)
+	Intersection(100, 400) # add(5)
 ]
 
 cars: list[Car] = [
-	Car(25, .1, intersections[1], intersections[0]),
-    
-	Car(20, .1, intersections[4], intersections[0]),
-    Car(15, .1, intersections[4], intersections[0]),
+	Car(25, .1, intersections[3], intersections[5])
 ]
 
-# cars[0].dist = 100
-cars[2].dist = 70
-cars[1].speed = 2
 
 from priority import Priority
 
@@ -43,41 +39,43 @@ intersections[0].prios = [
 	[
 		Priority(1, 10, [1]) # straight right
 	],
-    
+	
 	# from 1 (ie. intersections[2])
 	[
-        Priority(0, 10, [2, 3]), # turn left
-        Priority(1, 10, []), # turn right
+		Priority(0, 10, [2, 3]), # turn left
+		Priority(1, 10, []), # turn right
 	],
-    
+	
 	# from 2 (ie. intersections[3])
-    [
-        Priority(0, 10, [3]) # straight right
+	[
+		Priority(0, 10, [3]) # straight right
 	],
-    
+	
 	# from 3 (ie. intersections[4])
-    [
-        Priority(1, 10, [0, 1]), # turn left
-        Priority(0, 10, []), # turn right
+	[
+		Priority(1, 10, [0, 1]), # turn left
+		Priority(0, 10, []), # turn right
 	]
 ]
 
 
 
-intersections[1].targets = [
-	intersections[0]
-]
 
 intersections[2].targets = [
 	intersections[0]
 ]
 
 intersections[3].targets = [
-	intersections[0]
+	intersections[0],
+	intersections[5]
 ]
 
 intersections[4].targets = [
 	intersections[0]
 ]
 
+intersections[5].targets = [
+    intersections[4]
+]
 
+print(findPath(intersections[3], intersections[1]))

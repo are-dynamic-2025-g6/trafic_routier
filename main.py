@@ -7,10 +7,11 @@ from data import *
 from methods import Car_getNextPriority
 from methods import Car_frame
 
+
 def runLap():
 	for car in cars:
 		if car.alive: # for debug
-			Car_frame(car, intersections[3])
+			Car_frame(car)
 
 		car.move() # called every frame (because a car can't stop instantly)
 

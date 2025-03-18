@@ -1,55 +1,39 @@
 import heapq
 
-def findPath(graph, start, goal, heuristic):
-	# File de priorité (min-heap)
+from intersection import Intersection
+from intersection import Intersection_getWeight
+
+
+def findPath(start: Intersection, goal: Intersection):
+	def heuristic(intersectionA, intersectionB):
+		return ((intersectionA.x - intersectionB.x) ** 2 + (intersectionA.y - intersectionB.y) ** 2) ** 0.5
+	
 	open_set = []
-	heapq.heappush(open_set, (0, start))  # (coût estimé, noeud actuel)
-
-	# Coûts depuis le départ
-	g_score = {node: float('inf') for node in graph}
-	g_score[start] = 0
-
-	# Chemins reconstruits
+	heapq.heappush(open_set, (0, start, 0))
 	came_from = {}
-
+	g_score = {start: 0}
+	f_score = {start: heuristic(start, goal)}
+	
 	while open_set:
-		_, current = heapq.heappop(open_set)
+		_, current, index = heapq.heappop(open_set)
 
 		if current == goal:
-			# Reconstruire le chemin
 			path = []
 			while current in came_from:
-				path.append(current)
+				path.append(index)
 				current = came_from[current]
-			path.append(start)
-			return path[::-1]  # Retourner le chemin dans l'ordre
-
-		for neighbor, cost in graph[current].items():
-			tentative_g_score = g_score[current] + cost
-
-			if tentative_g_score < g_score[neighbor]:
+			path.append(index)
+			return path[::-1]
+		
+		for i in range(len(current.targets)):
+			neighbor = current.targets[i]
+			tentative_g_score = g_score[current] + Intersection_getWeight(current, neighbor)
+			
+			if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
 				came_from[neighbor] = current
 				g_score[neighbor] = tentative_g_score
-				f_score = tentative_g_score + heuristic(neighbor, goal)
-				heapq.heappush(open_set, (f_score, neighbor))
+				f_score[neighbor] = tentative_g_score + heuristic(neighbor, goal)
+				heapq.heappush(open_set, (f_score[neighbor], neighbor, i))
+	
+	return None
 
-	return None  # Aucun chemin trouvé
-
-# Exemple de graphe orienté et pondéré
-graph = {
-	'A': {'B': 2, 'C': 4},
-	'B': {'C': 1, 'D': 7},
-	'C': {'D': 3},
-	'D': {}
-}
-
-# Heuristique (exemple simplifié : distance directe)
-def heuristic(n, goal):
-	heuristic_values = {'A': 6, 'B': 4, 'C': 2, 'D': 0}  # Approximations
-	return heuristic_values[n]
-
-# Exécution de A*
-start = 'A'
-goal = 'D'
-chemin = a_star(graph, start, goal, heuristic)
-print("Chemin trouvé :", chemin)

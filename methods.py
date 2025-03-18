@@ -1,6 +1,8 @@
 from car import Car, CarInFront
 from intersection import Intersection
 from priority import Priority
+from findPath import findPath
+
 
 from math import sqrt, inf
 
@@ -77,6 +79,29 @@ def Car_changeRoad(car: Car, nextTarget: Intersection, nextPriority: Priority):
 
 
 
+def Car_definePath(car: Car):
+	origin: Intersection = car.origin
+
+	path = findPath(origin, car.finalTarget)	
+	if path == None:
+		return False
+	
+	# TODO: remove (bug!!)
+	path = [0, 0, 0] 
+	print("TODO: rm_bug")
+
+	target: Intersection = origin.targets[path[0]]
+	car.target = target
+	target.carsApproching.append(car)
+
+	
+	car.path = path
+	path.pop(0)
+
+
+	return True
+
+
 
 def Intersection_waitFor(priority: Priority, intersection: Intersection) -> list[Car]:
 	ret: list[Car] = []
@@ -89,9 +114,6 @@ def Intersection_waitFor(priority: Priority, intersection: Intersection) -> list
 	
 	return ret
 
-	
-
-		
 
 
 
@@ -101,9 +123,31 @@ def Intersection_waitFor(priority: Priority, intersection: Intersection) -> list
 
 
 
-def Car_frame(car: Car, nextTarget: Intersection):
+
+
+
+
+def Car_frame(car: Car):
 	origin: Intersection = car.origin
 	target: Intersection = car.target
+
+
+
+	# Check path
+	if car.path == None:
+		if not Car_definePath(car):
+			raise Exception("Cannot find path")
+		
+		target: Intersection = car.target
+
+
+
+	# Check car valid
+	if target == None:
+		return
+
+	print(car.path)
+	nextTarget: Intersection = target.targets[car.path[0]]
 
 	dx = target.x - origin.x
 	dy = target.y - origin.y
@@ -139,8 +183,6 @@ def Car_frame(car: Car, nextTarget: Intersection):
 	def calculateIdealSpeed():
 		keptDist = car.keptCheckDist
 
-		if car.id == 0:
-			print("%5.2f %7.2f %6.4f" % (keptDist, leftDist, car.speed))
 
 		# Check dist not yet reached
 		if keptDist == -1.0:

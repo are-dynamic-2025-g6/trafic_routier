@@ -2,11 +2,12 @@ INTERSECTION_SIZE = 10
 
 from enum import Enum
 from car import Car
+from math import sqrt
 
 Intersection_idGenerator = 0
 
 class Intersection:
-	def __init__(self, x: float, y: float, spawnCapacity = 0: int, carCount: int):
+	def __init__(self, x: float, y: float, spawnCapacity: int = 0, carCount: int = 0):
 		self.x = x
 		self.y = y
 		self.spawnCapacity = spawnCapacity
@@ -32,6 +33,11 @@ class Intersection:
 		
 		return -1
 	
+
+def Intersection_getWeight(origin: Intersection, target: Intersection):
+	dx = origin.x - target.x
+	dy = origin.y - target.y
+	return sqrt(dx*dx + dy*dy)
 	
 
 

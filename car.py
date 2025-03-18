@@ -12,14 +12,16 @@ class Car:
 	
 	id=0
 
-	def __init__(self, size: int, reachSpeedFactor: float, origin, target):
+	def __init__(self, size: int, reachSpeedFactor: float, origin, finalTarget):
 		self.origin = origin
-		self.target = target 
+		self.target = None
+		self.finalTarget = finalTarget
 		self.dist = 0.0
 		self.alive = True
 		self.nextPriority = None
 		self.id = Car.id
 		self.size = size
+		self.path: list[int] = None
 		Car.id += 1
 
 		self.reachSpeedFactor = reachSpeedFactor
@@ -29,9 +31,6 @@ class Car:
 		self.speed: float = 0
 		self.speedLimit = Car.STANDARD_MAX_SPEED
 		self.approchingTurnSpeed: float = -1
-
-		# add car to target list
-		target.carsApproching.append(self)
 
 
 	def reachSpeed(self, aimSpeed):
@@ -58,6 +57,9 @@ class Car:
 		self.speed -= Car.FRICTION_FACTOR * self.speed * self.speed
 
 	def getCoord(self):
+		if not self.target:
+			return (-1, -1)
+		
 		dx = self.target.x - self.origin.x
 		dy = self.target.y - self.origin.y
 		r = self.dist * Q_rsqrt(dx*dx + dy*dy)
