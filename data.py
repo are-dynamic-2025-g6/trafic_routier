@@ -1,81 +1,201 @@
-from intersection import *
-from car import *
-from findPath import findPath
-
-
-intersections: list[Intersection] = [
-	Intersection(300, 150), # center(0)
-	Intersection(570, 250), # right(1)
-	Intersection(200, 50), # top(2)
-	Intersection(50, 200), # left(3)
-	Intersection(200, 400), # bottom(4)
-	Intersection(100, 400) # add(5)
-]
-
-cars: list[Car] = [
-	Car(25, .1, intersections[3], intersections[5])
-]
-
-
+from Map import *
 from priority import Priority
+
+map = Map()
+
+
+map.intersections = [
+	Intersection(300, 350), # down(0)
+	Intersection(100, 250), # left(1)
+	Intersection(300, 50), # top(2)
+	Intersection(500, 250), # right(3)
+]
+
+map.cars = [
+	Car(25, .1, map.intersections[0], map.intersections[2]),
+	Car(25, .1, map.intersections[1], map.intersections[0]),
+]
+
+
 
 
 # fill map test
-intersections[0].targets = [
-	intersections[1],
-	intersections[3],
+map.intersections[0].targets = [
+	map.intersections[1],
+	map.intersections[2],
+	map.intersections[3],
 ]
 
-intersections[0].origins = [
-	intersections[1],
-	intersections[2],
-	intersections[3],
-	intersections[4],
+map.intersections[1].targets = [
+	map.intersections[0],
+	map.intersections[2],
+	map.intersections[3],
+]
+
+map.intersections[2].targets = [
+	map.intersections[0],
+	map.intersections[1],
+	map.intersections[3],
+]
+
+map.intersections[3].targets = [
+	map.intersections[0],
+	map.intersections[1],
+	map.intersections[2],
+]
+
+map.intersections[0].origins = [
+	map.intersections[1],
+	map.intersections[2],
+	map.intersections[3],
+]
+
+map.intersections[1].origins = [
+	map.intersections[0],
+	map.intersections[2],
+	map.intersections[3],
+]
+
+map.intersections[2].origins = [
+	map.intersections[0],
+	map.intersections[1],
+	map.intersections[3],
+]
+
+map.intersections[3].origins = [
+	map.intersections[0],
+	map.intersections[1],
+	map.intersections[2],
 ]
 
 
-intersections[0].prios = [
-	# from 0 (ie. intersections[1])
+map.intersections[0].prios = [
+	# from 0
 	[
-		Priority(1, 10, [1]) # straight right
+		Priority(0, 10, []),
+		Priority(1, 10, []),
+		Priority(2, 10, []),
 	],
 	
-	# from 1 (ie. intersections[2])
+	# from 1
 	[
-		Priority(0, 10, [2, 3]), # turn left
-		Priority(1, 10, []), # turn right
+		Priority(0, 10, []),
+		Priority(1, 10, []),
+		Priority(2, 10, []),
 	],
 	
-	# from 2 (ie. intersections[3])
+	# from 2
 	[
-		Priority(0, 10, [3]) # straight right
+		Priority(0, 10, []),
+		Priority(1, 10, []),
+		Priority(2, 10, []),
 	],
 	
-	# from 3 (ie. intersections[4])
+	# from 3
 	[
-		Priority(1, 10, [0, 1]), # turn left
-		Priority(0, 10, []), # turn right
+		Priority(0, 10, []),
+		Priority(1, 10, []),
+		Priority(2, 10, []),
+	]
+]
+
+
+
+map.intersections[1].prios = [
+	# from 0
+	[
+		Priority(0, 10, []),
+		Priority(1, 10, []),
+		Priority(2, 10, []),
+	],
+	
+	# from 1
+	[
+		Priority(0, 10, []),
+		Priority(1, 10, []),
+		Priority(2, 10, []),
+	],
+	
+	# from 2
+	[
+		Priority(0, 10, []),
+		Priority(1, 10, []),
+		Priority(2, 10, []),
+	],
+	
+	# from 3
+	[
+		Priority(0, 10, []),
+		Priority(1, 10, []),
+		Priority(2, 10, []),
+	]
+]
+
+
+
+map.intersections[2].prios = [
+	# from 0
+	[
+		Priority(0, 10, []),
+		Priority(1, 10, []),
+		Priority(2, 10, []),
+	],
+	
+	# from 1
+	[
+		Priority(0, 10, []),
+		Priority(1, 10, []),
+		Priority(2, 10, []),
+	],
+	
+	# from 2
+	[
+		Priority(0, 10, []),
+		Priority(1, 10, []),
+		Priority(2, 10, []),
+	],
+	
+	# from 3
+	[
+		Priority(0, 10, []),
+		Priority(1, 10, []),
+		Priority(2, 10, []),
+	]
+]
+
+
+
+map.intersections[3].prios = [
+	# from 0
+	[
+		Priority(0, 10, []),
+		Priority(1, 10, []),
+		Priority(2, 10, []),
+	],
+	
+	# from 1
+	[
+		Priority(0, 10, []),
+		Priority(1, 10, []),
+		Priority(2, 10, []),
+	],
+	
+	# from 2
+	[
+		Priority(0, 10, []),
+		Priority(1, 10, []),
+		Priority(2, 10, []),
+	],
+	
+	# from 3
+	[
+		Priority(0, 10, []),
+		Priority(1, 10, []),
+		Priority(2, 10, []),
 	]
 ]
 
 
 
 
-intersections[2].targets = [
-	intersections[0]
-]
 
-intersections[3].targets = [
-	intersections[0],
-	intersections[5]
-]
-
-intersections[4].targets = [
-	intersections[0]
-]
-
-intersections[5].targets = [
-    intersections[4]
-]
-
-print(findPath(intersections[3], intersections[1]))

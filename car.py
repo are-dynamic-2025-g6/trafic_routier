@@ -1,23 +1,22 @@
-CAR_SIZE = 20
+CAR_SIZE = 10
 
 from Q_rsqrt import Q_rsqrt
-from math import log
+import random
+
+from ParamObject import ParamObject
 
 class Car:
-	STANDARD_MAX_SPEED = 4
-	FRICTION_FACTOR = .176 / 1000
-	TURN_BRAKING_TICK_DURATION = 30
-	MAX_ACCELERATION = .08
-	MAX_DECELERATION = .5
-	
 	id=0
 
-	def __init__(self, size: int, reachSpeedFactor: float, origin, finalTarget):
+	INIT_MAX_SPEED = 8
+	ANGRY_UNIT = 2
+
+	def __init__(self, reachSpeedFactor: float, origin, finalTarget, size: int=20):
 		self.origin = origin
 		self.target = None
 		self.finalTarget = finalTarget
 		self.dist = 0.0
-		self.alive = True
+		self.spawnCouldown: int = -1
 		self.nextPriority = None
 		self.id = Car.id
 		self.size = size
@@ -29,16 +28,30 @@ class Car:
 		self.keptCheckDist = -1.0
 
 		self.speed: float = 0
-		self.speedLimit = Car.STANDARD_MAX_SPEED
+		self.speedLimit = Car.INIT_MAX_SPEED
 		self.approchingTurnSpeed: float = -1
 
 
-	def reachSpeed(self, aimSpeed):
+		# Stats data
+		self.spawnLapCount: int = -1
+		self.angryDuration = 1
+
+
+	def isAlive(self):
+		return self.spawnCouldown < 0
+
+	def kill(self, params: ParamObject):
+		self.spawnCouldown = round(
+			params.respawnCouldownAverage 
+			+ random.uniform(-1, 1) * params.respawnCouldownGap
+		)
+
+	def reachSpeed(self, aimSpeed, params: ParamObject):
 		val = self.reachSpeedFactor * (aimSpeed - self.speed)
-		if val > Car.MAX_ACCELERATION:
-			val = Car.MAX_ACCELERATION
-		elif val < -Car.MAX_DECELERATION:
-			val = -Car.MAX_DECELERATION
+		if val > params.maxAcceleration:
+			val = params.maxAcceleration
+		elif val < -params.maxBraking:
+			val = -params.maxBraking
 	
 		self.speed += val
 
@@ -52,9 +65,9 @@ class Car:
 		return 4 * s * s / self.reachSpeedFactor
 
 
-	def move(self):
+	def move(self, params: ParamObject):
 		self.dist += self.speed
-		self.speed -= Car.FRICTION_FACTOR * self.speed * self.speed
+		self.speed -= params.frictionFactor * self.speed * self.speed
 
 	def getCoord(self):
 		if not self.target:

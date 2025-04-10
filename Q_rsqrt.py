@@ -7,3 +7,4 @@ def Q_rsqrt(x):
 	y = y * (1.5 - (x * 0.5 * y * y))
 	
 	return y
+

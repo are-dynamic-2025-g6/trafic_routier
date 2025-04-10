@@ -3,10 +3,13 @@ from intersection import Intersection
 from priority import Priority
 from findPath import findPath
 
-
 from math import sqrt, inf
 
+from stats import *
+
+
 INFINITY = inf
+
 
 def Car_getNextPriorityList(car: Car) -> list[Priority]:
 	originIndex = car.target.getCarOriginIndex(car.origin)
@@ -46,16 +49,24 @@ def Intersection_getMaxTurnSpeed(
 	dist: float
 ):
 	maxTurnSpeed = .1
+
 	return maxTurnSpeed
 
 
 
-def Car_changeRoad(car: Car, nextTarget: Intersection, nextPriority: Priority):
+def Car_changeRoad(map: Map, car: Car, nextTarget: Intersection, nextPriority: Priority):
 	# Remove from carsApproching list
 	carTarget: Intersection = car.target
 
 	carTarget.carsApproching.remove(car)
 	
+	if not car.path:
+		car.origin = carTarget
+		Stat_onCarFinish(map, car)
+		car.kill(map.params)
+		return
+
+
 	# Add to next target
 	nextTarget.carsApproching.append(car)
 
@@ -69,34 +80,44 @@ def Car_changeRoad(car: Car, nextTarget: Intersection, nextPriority: Priority):
 	
 	car.keptCheckDist = -1.0
 
-	# TODO: speed limit ~ priority
 
 
+	# Consume next path
+	carTarget.targets[car.path[0]]
+	car.path.pop(0)
 	
-	# TODO: to remove, cf main.py:13
-	car.alive = False
+	
 
 
+
+
+def Car_spawn(car: Car, finalTarget: Intersection):
+	if finalTarget == None or finalTarget == car.origin:
+		car.spawnCouldown = 3 # try another spawn
+		return False
+
+	car.finalTarget = finalTarget
+	if Car_definePath(car):
+		car.speed = 0
+		return True
+	
+	car.spawnCouldown = 3 # try another spawn
+	return False
 
 
 def Car_definePath(car: Car):
 	origin: Intersection = car.origin
 
 	path = findPath(origin, car.finalTarget)	
-	if path == None:
+	if not path:
 		return False
 	
-	# TODO: remove (bug!!)
-	path = [0, 0, 0] 
-	print("TODO: rm_bug")
-
 	target: Intersection = origin.targets[path[0]]
 	car.target = target
 	target.carsApproching.append(car)
 
-	
-	car.path = path
 	path.pop(0)
+	car.path = path
 
 
 	return True
@@ -105,10 +126,9 @@ def Car_definePath(car: Car):
 
 def Intersection_waitFor(priority: Priority, intersection: Intersection) -> list[Car]:
 	ret: list[Car] = []
-	for car in intersection.carsApproching:
-		origin: Intersection = car.origin
-		for dirIndex in priority.waitFor:
-			if intersection.targets[dirIndex] == origin:
+	for originIndex in priority.waitFor:
+		for car in intersection.carsApproching:
+			if intersection.origins[originIndex] == car.origin:
 				ret.append(car)
 				break
 	
@@ -127,7 +147,7 @@ def Intersection_waitFor(priority: Priority, intersection: Intersection) -> list
 
 
 
-def Car_frame(car: Car):
+def Car_frame(map: Map, car: Car):
 	origin: Intersection = car.origin
 	target: Intersection = car.target
 
@@ -146,22 +166,29 @@ def Car_frame(car: Car):
 	if target == None:
 		return
 
-	print(car.path)
-	nextTarget: Intersection = target.targets[car.path[0]]
+	# print(origin.x, target.targets[0].x, car.path)
+	if car.path:
+		nextTarget: Intersection = target.targets[car.path[0]]
+	else:
+		nextTarget: Intersection = None
+
+
 
 	dx = target.x - origin.x
 	dy = target.y - origin.y
 
-	# TODO: optimization
 	fullDist = sqrt(dx*dx + dy*dy)
 	leftDist = fullDist - car.dist
 
 	# Get next priority
-	if car.nextPriority == None:
-		nextPriority = Car_getNextPriority(car, nextTarget)
-		car.nextPriority = nextPriority
+	if nextTarget:
+		if car.nextPriority == None:
+			nextPriority = Car_getNextPriority(car, nextTarget)
+			car.nextPriority = nextPriority
+		else:
+			nextPriority: Priority = car.nextPriority
 	else:
-		nextPriority: Priority = car.nextPriority
+		nextPriority: Priority = None
 
 
 
@@ -181,12 +208,15 @@ def Car_frame(car: Car):
 
 
 	def calculateIdealSpeed():
+		if nextPriority == None:
+			return car.speedLimit
+
 		keptDist = car.keptCheckDist
 
 
 		# Check dist not yet reached
 		if keptDist == -1.0:
-			checkDist = car.speed * Car.TURN_BRAKING_TICK_DURATION
+			checkDist = car.speed * map.params.turnBrakingTickDuration
 
 			if leftDist > checkDist:
 				return car.speedLimit
@@ -225,7 +255,7 @@ def Car_frame(car: Car):
 				bestCar = i
 
 		
-		if checkNextFront:
+		if nextTarget and checkNextFront:
 			# Search in next road
 			for i in nextTarget.carsApproching:
 				if i.origin != target:
@@ -260,7 +290,7 @@ def Car_frame(car: Car):
 		return carInFront.car.speed * (dist - sizeSum) / fullDist
 		
 
-	if car.approchingTurnSpeed == -1:
+	if nextTarget and car.approchingTurnSpeed == -1:
 		s = Intersection_getMaxTurnSpeed(origin, target, nextTarget, nextPriority.turnDist)
 		if s <= car.speedLimit:
 			car.approchingTurnSpeed = s
@@ -272,13 +302,13 @@ def Car_frame(car: Car):
 
 
 	# Get speed
-	car.reachSpeed(getSpeed())
+	car.reachSpeed(getSpeed(), map.params)
 
 
 	# Change road
 	if (car.dist >= fullDist):
 		car.dist -= fullDist
-		Car_changeRoad(car, nextTarget, nextPriority)
+		Car_changeRoad(map, car, nextTarget, nextPriority)
 
 	
 

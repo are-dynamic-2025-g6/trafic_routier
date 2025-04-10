@@ -13,9 +13,9 @@ class Priority:
 	PASS = 3
 
 	def __init__(self, targetIndex: int, turnDist: float, waitFor: list[int]):
-		self.targetIndex = targetIndex # read in origin list
+		self.targetIndex = targetIndex # read in target list
 		self.turnDist = turnDist
-		self.waitFor = waitFor # read in target list
+		self.waitFor = waitFor # read in origin list
 
 
 
