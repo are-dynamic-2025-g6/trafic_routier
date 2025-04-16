@@ -7,6 +7,8 @@ from math import sqrt, inf
 
 from stats import *
 
+import Q_rsqrt
+
 
 INFINITY = inf
 
@@ -48,13 +50,15 @@ def Intersection_getMaxTurnSpeed(
 	target: Intersection,
 	dist: float
 ):
-	maxTurnSpeed = .1
+	maxTurnSpeed = 2
 
 	return maxTurnSpeed
 
 
 
 def Car_changeRoad(map: Map, car: Car, nextTarget: Intersection, nextPriority: Priority):
+	car.fullDist = 0
+
 	# Remove from carsApproching list
 	carTarget: Intersection = car.target
 
@@ -67,12 +71,14 @@ def Car_changeRoad(map: Map, car: Car, nextTarget: Intersection, nextPriority: P
 		return
 
 
+	car.origin = carTarget
+	Car_definePath(car)
+	# nextTarget = car.target
+
 	# Add to next target
-	nextTarget.carsApproching.append(car)
+	# nextTarget.carsApproching.append(car)
 
 	# Change car origin
-	car.origin = carTarget
-	car.target = nextTarget
 
 	# Adjustements
 	car.approchingTurnSpeed = -1 # load next max turn speed
@@ -83,8 +89,8 @@ def Car_changeRoad(map: Map, car: Car, nextTarget: Intersection, nextPriority: P
 
 
 	# Consume next path
-	carTarget.targets[car.path[0]]
-	car.path.pop(0)
+	# carTarget.targets[car.path[0]]
+	# car.path.pop(0)
 	
 	
 
@@ -177,7 +183,12 @@ def Car_frame(map: Map, car: Car):
 	dx = target.x - origin.x
 	dy = target.y - origin.y
 
-	fullDist = sqrt(dx*dx + dy*dy)
+	if car.fullDist == 0:
+		fullDist = sqrt(dx*dx + dy*dy)
+		car.fullDist = fullDist
+	else:
+		fullDist = car.fullDist
+
 	leftDist = fullDist - car.dist
 
 	# Get next priority
@@ -194,46 +205,56 @@ def Car_frame(map: Map, car: Car):
 
 
 	def Intersection_canPass():
+		for originIndex in nextPriority.waitFor:
+			for car in target.carsApproching:
+				if target.origins[originIndex] == car.origin:
+					nextDist = map.params.checkPassingDuration * car.speed
+					if car.dist + nextDist >= car.fullDist:
+						return False
+		
+		return True
+
+
+		"""
 		waitFor = Intersection_waitFor(nextPriority, target)
 		
 		if not waitFor:
 			return True
 
 
-		# Check if we can pass (using distances)
+		# TODO: Check if we can pass (using distances)
 
 		return False
+		"""
 	
 
 
 
 	def calculateIdealSpeed():
-		if nextPriority == None:
+		checkDist = car.size * map.params.checkIntersectionDistFactor
+		if leftDist >= checkDist:
 			return car.speedLimit
+		
 
-		keptDist = car.keptCheckDist
-
-
-		# Check dist not yet reached
-		if keptDist == -1.0:
-			checkDist = car.speed * map.params.turnBrakingTickDuration
-
-			if leftDist > checkDist:
-				return car.speedLimit
-
-			car.keptCheckDist = checkDist
-			keptDist = checkDist
+		if nextPriority == None:
+			return .1 + (leftDist/checkDist) * (car.speedLimit - .1)
 
 
-		# If here, Check dist reached
+
 
 		# Check intersection
-		if not Intersection_canPass():
+		if Intersection_canPass():
+			return car.approchingTurnSpeed + (leftDist/checkDist) * (car.speedLimit - car.approchingTurnSpeed)
+
+		minDist = car.size * map.params.stopDistFactor
+		if leftDist <= minDist:
 			return 0
 		
-		# Slow turn for turn
-		return car.approchingTurnSpeed + (leftDist/keptDist) * (car.speedLimit - car.approchingTurnSpeed)
+		return ((leftDist - minDist) / (checkDist - minDist)) * car.speedLimit
 
+
+
+			
 
 
 

@@ -55,6 +55,8 @@ class StatObject:
 		self.leastUsed = StatObjectData()
 		self.sameUsed = StatObjectData()
 
+		self.sumDist = StatObjectData()
+
 		
 
 	def addTrajectDuration(self, duration: int):

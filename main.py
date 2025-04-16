@@ -21,7 +21,8 @@ from math import sqrt
 
 from car import Car
 
-CAR_COUNT = 5
+CAR_COUNT = 600
+
 
 
 from Map import Map
@@ -29,13 +30,24 @@ from stats import *
 
 mapList: list[Map] = []
 
-for i in range(len(pointsList)):
-	m = Map()
-	m.intersections = generateMap(pointsList[i])
-	m.cars = []
+
+def produceCars(m: Map):
+	# return
+	# time.sleep(3)
 
 	length = len(m.intersections)-1
-	for _ in range(CAR_COUNT):
+	for k in range(CAR_COUNT):
+		
+		if k > CAR_COUNT/3:
+			time.sleep(2)
+		elif k > 2*CAR_COUNT/3:
+			time.sleep(4)
+		else:
+			time.sleep(1)
+
+		print(k)
+
+
 		while True:
 			i = random.randint(0, length)
 			j = random.randint(0, length)
@@ -54,13 +66,21 @@ for i in range(len(pointsList)):
 
 		
 		m.cars.append(
-			Car(.1, m.intersections[i], m.intersections[j]),
+			Car(1, m.intersections[i], m.intersections[j]),
 		)
+		m.intersections[j].finalTargetCarCount += 1
 
 
+
+
+for i in range(len(pointsList)):
+	m = Map()
+	m.intersections = generateMap(pointsList[i])
+	m.cars = []
 	m.setSize()
 	mapList.append(m)
 
+	threading.Thread(args=(m,), target=produceCars).start()
 
 
 
@@ -83,6 +103,7 @@ def runLap(map: Map):
 					dx = finalTarget.x - car.origin.x
 					dy = finalTarget.y - car.origin.y
 					dist = sqrt(dx*dx + dy*dy)
+					finalTarget.finalTargetCarCount += 1
 					car.angryDuration = int(Car.ANGRY_UNIT * dist)
 
 
@@ -108,21 +129,35 @@ def runMapList():
 
 
 class DrawObject:
-	def __init__(self, map: Map):
+	def __init__(self, map: Map, dx, dy, zoom, drawArrow = True):
 		pygame.init()
 		pygame.display.set_caption("Traffic rider")
 		self.map = map
 		self.screen = pygame.display.set_mode((1200, 1200))
 		self.font = pygame.font.Font(None, 20)
 		self.clock = pygame.time.Clock()
+		self.drawArrow = drawArrow
+
+		self.offsetX = dx
+		self.offsetY = dy
+		self.zoom = zoom
 		
 	def __del__(self):
 		pygame.quit()
-
-
+	
 	def drawGame(self):
-		# thanks chatgpt
+		def applyZoom(x, y):
+			# Applique le zoom et l'offset
+			return (
+				x * self.zoom + self.offsetX,
+				y * self.zoom + self.offsetY
+			)
+
 		def drawArrow(color, start, end, percentage=0.8, arrow_size=10, thickness=1):
+			# Appliquer zoom aux coordonnées
+			start = applyZoom(*start)
+			end = applyZoom(*end)
+
 			# Calcul du point à "percentage%" du segment
 			point_x = start[0] + percentage * (end[0] - start[0])
 			point_y = start[1] + percentage * (end[1] - start[1])
@@ -131,65 +166,72 @@ class DrawObject:
 			# Dessiner le segment
 			pygame.draw.line(self.screen, color, start, end, thickness)
 
-			# Calcul de la direction du segment
-			direction = pygame.math.Vector2(end) - pygame.math.Vector2(start)
-			direction = direction.normalize()
 
-			# Calcul des points pour la flèche
-			left = pygame.math.Vector2(-direction.y, direction.x) * arrow_size
-			right = pygame.math.Vector2(direction.y, -direction.x) * arrow_size
-			back = pygame.math.Vector2(-direction.x, -direction.y) * arrow_size
+			if self.drawArrow:
+				# Calcul de la direction du segment
+				direction = pygame.math.Vector2(end) - pygame.math.Vector2(start)
+				direction = direction.normalize()
 
-			arrow_tip = pygame.math.Vector2(arrow_pos)
-			arrow_left = arrow_tip + back + left
-			arrow_right = arrow_tip + back + right
+				# Calcul des points pour la flèche
+				left = pygame.math.Vector2(-direction.y, direction.x) * arrow_size * self.zoom
+				right = pygame.math.Vector2(direction.y, -direction.x) * arrow_size * self.zoom
+				back = pygame.math.Vector2(-direction.x, -direction.y) * arrow_size * self.zoom
 
-			# Dessiner la flèche à 80% du segment
-			pygame.draw.polygon(self.screen, color, [arrow_tip, arrow_left, arrow_right])
+				arrow_tip = pygame.math.Vector2(arrow_pos)
+				arrow_left = arrow_tip + back + left
+				arrow_right = arrow_tip + back + right
+
+				# Dessiner la flèche
+				pygame.draw.polygon(self.screen, color, [arrow_tip, arrow_left, arrow_right])
+				
+			
 
 
-
-		
-
-		# white background
+		# Effacer l’écran
 		self.screen.fill((255, 255, 255))
-		
-		# draw roads (red)
+
+		# Dessiner les routes
 		for i in self.map.intersections:
 			for d in i.targets:
 				drawArrow((63, 63, 63), (i.x, i.y), (d.x, d.y))
-		
-		# draw intersections (purple)
-		for i in self.map.intersections:
-			pygame.draw.rect(self.screen, (127, 0, 255), (i.x - INTERSECTION_SIZE/2, i.y - INTERSECTION_SIZE/2, INTERSECTION_SIZE, INTERSECTION_SIZE))
+
+		# Dessiner les intersections
+		if self.drawArrow:
+			for i in self.map.intersections:
+				x, y = applyZoom(i.x, i.y)
+				size = INTERSECTION_SIZE * self.zoom
+				pygame.draw.rect(self.screen, (127, 0, 255), (x - size/2, y - size/2, size, size))
+
+				# if i.finalTargetCarCount >= 1:
+				if False:
+					radius = i.finalTargetCarCount * 10 * self.zoom  # Tu peux changer 20 par un autre facteur si tu veux
+					circle_color = (200, 200, 200, 100)  # Dernier paramètre = alpha (0-255)
+
+					circle_surf = pygame.Surface((radius*2, radius*2), pygame.SRCALPHA)
+					pygame.draw.circle(circle_surf, circle_color, (radius, radius), radius)
+					self.screen.blit(circle_surf, (x - radius, y - radius))
 
 
 
-		# draw cars (green)
+		# Dessiner les voitures
 		for car in self.map.cars:
 			x, y = car.getCoord()
-			size = car.size
-			halfSize = size/2
+			x, y = applyZoom(x, y)
+			size = car.size * self.zoom
+			halfSize = size / 2
 
 			if car.isAlive():
 				if car.spawnLapCount == -1:
 					color = (0, 127, 255)
 				else:
 					r = (self.map.lapCount - car.spawnLapCount)/car.angryDuration
-					if r > 1:
-						r = 1
-					
-					color = (
-						int(255*r),
-						int(255*(1-r)),
-						0
-					)
-
-					
+					r = min(r, 1)
+					color = (int(255*r), int(255*(1-r)), 0)
 			else:
 				color = (127, 127, 127)
 
 			pygame.draw.rect(self.screen, color, (x - halfSize, y - halfSize, size, size))
+
 
 
 
@@ -204,8 +246,8 @@ def drawMapLoop(draw):
 			if event.type == pygame.QUIT:
 				running = False
 
-		for _ in range(2):
-			runLap(draw.map)
+		# for _ in range(1):
+			# runLap(draw.map)
 
 		draw.drawGame()
 		pygame.display.flip()  # Mettre à jour l'affichage
@@ -239,70 +281,65 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 USE_BARS = False
-
 def mathThread():
+	properties = ["wait", "maxWait", "sumDist"]  # Ajoute ici toutes les propriétés que tu veux afficher
+	USE_BARS = False  # ou True selon ton besoin
+
 	# Initialisation de dataList, une liste de tableaux de données
-	dataList = [[0] for _ in range(len(mapList))]
+	dataList = [([0] * len(mapList)) for _ in properties]
 
-	def fillList(propertyName):
+	def fillList(index):
 		for i in range(len(mapList)):
-			dataList[i] = getattr(mapList[i].stats, propertyName).list
+			dataList[index][i] = getattr(mapList[i].stats, properties[index]).list
 
-
-
-
-	# Changement des donnees
 	def mainFrame():
 		runMapList()
+		for i in range(len(properties)):
+			fillList(i)
 
-		# TAG: runStatList
-		# StatList_trajectDuration(mapList, dataList)
-		# StatList_waitList(mapList, dataList)
+	# Création de la figure et des axes : un subplot par propriété
+	num_props = len(properties)
+	fig, axes = plt.subplots(num_props, 1, figsize=(8, 4 * num_props))
+	if num_props == 1:
+		axes = [axes]  # Pour que axes soit toujours itérable
 
-		fillList("wait")
-		
+	colors = ['r', 'g', 'b', 'c', 'm']
+	# labels = ["r=400", "r=200", "r=60"]  # Adapte si besoin
+	labels = ["su", "gir", "drt"]  # Adapte si besoin
 
-
-
-	# Fonction d'animation
 	def update(frame):
-		mainFrame()  # Met à jour les données dans dataList
-		
-		# Efface la figure actuelle avant de redessiner
-		ax.clear()
-		
-		# Affiche chaque série de données dans dataList avec une couleur différente
-		colors = ['r', 'g', 'b', 'c', 'm']  # Liste des couleurs à utiliser
-		labels = [.5, .8, 1, 2, 3]
+		mainFrame()
 
-		if USE_BARS:
-			for i, data in enumerate(dataList):
-				ax.bar(np.arange(len(data)) + i * 0.2, data, width=0.2, color=colors[i % len(colors)], label=f'Data {i+1}')
-		else:
-			for i, data in enumerate(dataList):
-				ax.plot(data, color=colors[i % len(colors)], label=f'Zoom {labels[i]}')
-			
+		# if frame % 10 == 0:
+			# print(dataList)
 
-		# Réglages du graphique
-		ax.set_title("Données en temps réel")
-		ax.set_xlabel("Index")
-		ax.set_ylabel("Valeur")
-		ax.legend()
+		for idx, ax in enumerate(axes):
+			ax.clear()
+			prop_data = dataList[idx]
 
-	# Création de la figure et des axes
-	fig, ax = plt.subplots()
+			if USE_BARS:
+				for i, data in enumerate(prop_data):
+					ax.bar(np.arange(len(data)) + i * 0.2, data, width=0.2,
+					       color=colors[i % len(colors)], label=f'Data {i+1}')
+			else:
+				for i, data in enumerate(prop_data):
+					ax.plot(data, color=colors[i % len(colors)],
+					        label=labels[i] if i < len(labels) else f'Data {i+1}')
 
-	# Animation avec FuncAnimation
-	anim = FuncAnimation(fig, update, frames=1000, interval=100, repeat=False)
+			ax.set_title("Graph")
+			ax.set_xlabel("Temps")
+			ax.set_ylabel(f"{properties[idx]}")
+			ax.legend()
 
-	# Affichage de l'animation
+	anim = FuncAnimation(fig, update, frames=1000000, interval=1, repeat=False)
+	plt.tight_layout()
 	plt.show()
 
 
+threading.Thread(target=mathThread).start()
 
-
-# threading.Thread(target=mathThread).start()
-drawMapLoop(DrawObject(mapList[0]))
+drawMapLoop(DrawObject(mapList[1], 50, 50, .6, False))
+# drawMapLoop(DrawObject(mapList[1], 50, 50, .6, False))
 
 # mathThread()
 

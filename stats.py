@@ -19,6 +19,8 @@ def Stat_runLap(map: Map):
 	map.stats.mostUsed.run(map, Stat_countMostUsed)
 	map.stats.leastUsed.run(map, Stat_countLeastUsed)
 	map.stats.sameUsed.run(map, Stat_countSameUsed)
+
+	map.stats.sumDist.run(map, Stat_countSumDist)
 	
 
 
@@ -26,6 +28,7 @@ def Stat_onCarFinish(map: Map, car: Car):
 	if car.spawnLapCount < 0:
 		return
 	
+	car.finalTarget.finalTargetCarCount -= 1
 	map.stats.addTrajectDuration(map.lapCount - car.spawnLapCount)
 
 
@@ -48,7 +51,7 @@ def Stat_countAngryCars(map: Map):
 def Stat_maxWait(map: Map):
 	bestWait = 0
 	for car in map.cars:
-		if car.isAlive():
+		if car.isAlive() and car.spawnLapCount > 0:
 			w = map.lapCount - car.spawnLapCount
 			if w > bestWait:
 				bestWait = w
@@ -180,6 +183,27 @@ def Stat_countSameUsed(map: Map):
 
 
 
+from math import sqrt
+
+def Stat_countSumDist(map: Map):
+	# cx = 600
+	# cy = 600
+
+	cx = 2.5 * 300
+	cy = 2.5 * 300
+
+	count = 0
+	carCount = 0
+	for car in map.cars:
+		if car.isAlive():
+			carCount += 1
+			x, y = car.getCoord()
+			count += sqrt((x-cx)**2 + (y-cy)**2)
+	
+	if carCount == 0:
+		return 0
+	
+	return count / carCount
 
 
 

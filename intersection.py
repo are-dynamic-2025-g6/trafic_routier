@@ -19,6 +19,7 @@ class Intersection:
 		self.carsApproching: list[Car] = [] # cars trying to go on the intersection
 		self.targets: list[Intersection] = [] # intersections towards we can go
 		self.origins: list[Intersection] = [] # intersections 
+		self.finalTargetCarCount = 0
 		
 		Intersection.id += 1
 
