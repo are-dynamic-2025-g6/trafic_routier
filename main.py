@@ -17,11 +17,11 @@ from mapGenerator import generateMap, pointsList
 
 import threading
 import random
-from math import sqrt
+from math import sqrt, degrees, atan2
 
 from car import Car
 
-CAR_COUNT = 600
+CAR_COUNT = 40
 
 
 
@@ -29,46 +29,26 @@ from Map import Map
 from stats import *
 
 mapList: list[Map] = []
+LIMITS = [3.5, 3.6, 3.7, 3.8, 3.9]
 
 
 def produceCars(m: Map):
 	# return
-	# time.sleep(3)
+	time.sleep(3)
 
 	length = len(m.intersections)-1
 	for k in range(CAR_COUNT):
 		
-		if k > CAR_COUNT/3:
-			time.sleep(2)
-		elif k > 2*CAR_COUNT/3:
-			time.sleep(4)
-		else:
-			time.sleep(1)
+		time.sleep(.1)
 
 		print(k)
 
 
-		while True:
-			i = random.randint(0, length)
-			j = random.randint(0, length)
+		car = Car(1, m.createRandomFinalTarget(), None)
+		car.speedLimit = LIMITS[m.index]
+		car.kill(m.params)
+		m.cars.append(car)
 
-			if i == j:
-				continue
-
-			if m.intersections[i].spawnScore <= 0:
-				continue
-
-			if m.intersections[j].spawnScore <= 0:
-				continue
-
-			# i, j are valid
-			break
-
-		
-		m.cars.append(
-			Car(1, m.intersections[i], m.intersections[j]),
-		)
-		m.intersections[j].finalTargetCarCount += 1
 
 
 
@@ -79,6 +59,7 @@ for i in range(len(pointsList)):
 	m.cars = []
 	m.setSize()
 	mapList.append(m)
+	
 
 	threading.Thread(args=(m,), target=produceCars).start()
 
@@ -97,14 +78,20 @@ def runLap(map: Map):
 			car.spawnCouldown -= 1
 			if (car.spawnCouldown <= 0):
 				car.spawnCouldown = -1
-				finalTarget = map.createRandomFinalTarget()
+				finalTarget = map.createRandomFinalTarget(car.origin)
 				if Car_spawn(car, finalTarget):
-					car.spawnLapCount = map.lapCount
+					car.stat_spawnLapCount = map.lapCount
 					dx = finalTarget.x - car.origin.x
 					dy = finalTarget.y - car.origin.y
 					dist = sqrt(dx*dx + dy*dy)
 					finalTarget.finalTargetCarCount += 1
-					car.angryDuration = int(Car.ANGRY_UNIT * dist)
+					car.stat_angryDuration = int(Car.ANGRY_UNIT * dist)
+
+					if map.params.keepSameDirection >= 0:
+						car.path = [0, 0, 0]
+
+
+
 
 
 
@@ -128,10 +115,11 @@ def runMapList():
 
 
 
+pygame.init()
+pygame.display.set_caption("Traffic rider")
+
 class DrawObject:
 	def __init__(self, map: Map, dx, dy, zoom, drawArrow = True):
-		pygame.init()
-		pygame.display.set_caption("Traffic rider")
 		self.map = map
 		self.screen = pygame.display.set_mode((1200, 1200))
 		self.font = pygame.font.Font(None, 20)
@@ -142,8 +130,8 @@ class DrawObject:
 		self.offsetY = dy
 		self.zoom = zoom
 		
-	def __del__(self):
-		pygame.quit()
+	# def __del__(self):
+		# pygame.quit()
 	
 	def drawGame(self):
 		def applyZoom(x, y):
@@ -215,22 +203,37 @@ class DrawObject:
 
 		# Dessiner les voitures
 		for car in self.map.cars:
-			x, y = car.getCoord()
+			x, y, dx, dy = car.getCoord()
 			x, y = applyZoom(x, y)
 			size = car.size * self.zoom
 			halfSize = size / 2
 
 			if car.isAlive():
-				if car.spawnLapCount == -1:
+				if car.stat_spawnLapCount == -1:
 					color = (0, 127, 255)
 				else:
-					r = (self.map.lapCount - car.spawnLapCount)/car.angryDuration
+					r = (self.map.lapCount - car.stat_spawnLapCount)/car.stat_angryDuration
 					r = min(r, 1)
 					color = (int(255*r), int(255*(1-r)), 0)
 			else:
 				color = (127, 127, 127)
 
-			pygame.draw.rect(self.screen, color, (x - halfSize, y - halfSize, size, size))
+
+
+			angle = -degrees(atan2(dy, dx))
+
+			rect_surf = pygame.Surface((size, size), pygame.SRCALPHA)
+			rect_surf.fill(color)
+
+			# Rotation de la surface
+			rotated_surf = pygame.transform.rotate(rect_surf, angle)
+
+			# Centrage autour de (x, y)
+			rotated_rect = rotated_surf.get_rect(center=(x, y))
+
+			# Dessin sur l’écran
+			self.screen.blit(rotated_surf, rotated_rect)
+
 
 
 
@@ -246,8 +249,8 @@ def drawMapLoop(draw):
 			if event.type == pygame.QUIT:
 				running = False
 
-		# for _ in range(1):
-			# runLap(draw.map)
+		for _ in range(1):
+			runLap(draw.map)
 
 		draw.drawGame()
 		pygame.display.flip()  # Mettre à jour l'affichage
@@ -281,8 +284,13 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 USE_BARS = False
+properties = ["maxSpeed", "avgSpeed", "maxAcceleration", "avgAcceleration"]
+labels = [f"v={i}" for i in LIMITS]
+
+
+
+
 def mathThread():
-	properties = ["wait", "maxWait", "sumDist"]  # Ajoute ici toutes les propriétés que tu veux afficher
 	USE_BARS = False  # ou True selon ton besoin
 
 	# Initialisation de dataList, une liste de tableaux de données
@@ -305,7 +313,6 @@ def mathThread():
 
 	colors = ['r', 'g', 'b', 'c', 'm']
 	# labels = ["r=400", "r=200", "r=60"]  # Adapte si besoin
-	labels = ["su", "gir", "drt"]  # Adapte si besoin
 
 	def update(frame):
 		mainFrame()
@@ -336,10 +343,12 @@ def mathThread():
 	plt.show()
 
 
-threading.Thread(target=mathThread).start()
+# threading.Thread(target=mathThread).start()
 
-drawMapLoop(DrawObject(mapList[1], 50, 50, .6, False))
-# drawMapLoop(DrawObject(mapList[1], 50, 50, .6, False))
+
+drawMapLoop(DrawObject(mapList[0], 40, 40, 1, True))
+
+# drawMapLoop(DrawObject(mapList[1], 50, 50, 1, True))
 
 # mathThread()
 

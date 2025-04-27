@@ -7,6 +7,7 @@ class ParamObject:
         self.stopDistFactor: float = 5
         self.frictionFactor: float = .176 / 1000
         self.standardMaxSpeed: float = 4
-        self.respawnCouldownAverage: float = 200
-        self.respawnCouldownGap: float = 100
+        self.respawnCouldownAverage: float = 1
+        self.respawnCouldownGap: float = 0
+        self.keepSameDirection: int = -1
         

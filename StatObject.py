@@ -57,6 +57,12 @@ class StatObject:
 
 		self.sumDist = StatObjectData()
 
+		self.maxSpeed = StatObjectData()
+		self.avgSpeed = StatObjectData()
+		
+		self.maxAcceleration = StatObjectData()
+		self.avgAcceleration = StatObjectData()
+
 		
 
 	def addTrajectDuration(self, duration: int):

@@ -43,14 +43,14 @@ def Car_getNextPriority(car: Car, target: Intersection) -> Priority :
 
 
 
-# TODO: this method, cf. https://chatgpt.com/share/67cc026d-09bc-8003-8296-f8737da12049
+# TODO: this method
 def Intersection_getMaxTurnSpeed(
 	origin: Intersection,
 	passedBy: Intersection,
 	target: Intersection,
 	dist: float
 ):
-	maxTurnSpeed = 2
+	maxTurnSpeed = 200000000
 
 	return maxTurnSpeed
 
@@ -64,15 +64,23 @@ def Car_changeRoad(map: Map, car: Car, nextTarget: Intersection, nextPriority: P
 
 	carTarget.carsApproching.remove(car)
 	
-	if not car.path:
+	if map.params.keepSameDirection == -1:
+		if not car.path:
+			car.origin = carTarget
+			Stat_onCarFinish(map, car)
+			car.kill(map.params)
+			return
+
 		car.origin = carTarget
-		Stat_onCarFinish(map, car)
-		car.kill(map.params)
-		return
+		Car_definePath(car)
 
+	else:
+		car.origin = carTarget
+		target = carTarget.targets[0]
+		car.target = target
+		target.carsApproching.append(car)
+		car.path = [0, 0, 0]
 
-	car.origin = carTarget
-	Car_definePath(car)
 	# nextTarget = car.target
 
 	# Add to next target
@@ -172,6 +180,7 @@ def Car_frame(map: Map, car: Car):
 	if target == None:
 		return
 
+
 	# print(origin.x, target.targets[0].x, car.path)
 	if car.path:
 		nextTarget: Intersection = target.targets[car.path[0]]
@@ -236,8 +245,9 @@ def Car_frame(map: Map, car: Car):
 			return car.speedLimit
 		
 
+		# For finishing cars
 		if nextPriority == None:
-			return .1 + (leftDist/checkDist) * (car.speedLimit - .1)
+			return ((leftDist/checkDist)*.5 + .5) * car.speedLimit
 
 
 
@@ -293,7 +303,8 @@ def Car_frame(map: Map, car: Car):
 
 
 	def getSpeed():
-		carInFront = getCarInFront(car.keptCheckDist != -1)
+		# TODO: car.keptCheckDist != -1
+		carInFront = getCarInFront(True)
 		if carInFront.car == None:
 			return calculateIdealSpeed()
 		
@@ -316,7 +327,7 @@ def Car_frame(map: Map, car: Car):
 		if s <= car.speedLimit:
 			car.approchingTurnSpeed = s
 		else:
-			car.approchingTurnSpeed = car.approchingTurnSpeed
+			car.approchingTurnSpeed = car.speedLimit
 
 
 

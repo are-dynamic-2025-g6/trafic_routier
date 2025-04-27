@@ -8,7 +8,7 @@ from ParamObject import ParamObject
 class Car:
 	id=0
 
-	INIT_MAX_SPEED = 25
+	INIT_MAX_SPEED = 5
 	ANGRY_UNIT = 2
 	DEFAULT_SIZE = 12
 
@@ -35,8 +35,9 @@ class Car:
 
 
 		# Stats data
-		self.spawnLapCount: int = -1
-		self.angryDuration = 1
+		self.stat_spawnLapCount: int = -1
+		self.stat_angryDuration = 1
+		self.stat_acceleration = 0
 
 
 	def isAlive(self):
@@ -58,6 +59,9 @@ class Car:
 	
 		self.speed += val
 
+		if val > 0:
+			self.stat_acceleration += val
+		
 
 	def getSafetyDist(self):
 		s = self.speed
@@ -75,7 +79,7 @@ class Car:
 
 	def getCoord(self):
 		if not self.target:
-			return (-1, -1)
+			return (-1, -1, -1, -1)
 		
 		dx = self.target.x - self.origin.x
 		dy = self.target.y - self.origin.y
@@ -83,7 +87,9 @@ class Car:
 
 		return (
 			self.origin.x + dx*r,
-			self.origin.y + dy*r
+			self.origin.y + dy*r,
+			dx,
+			dy
 		)
 
 

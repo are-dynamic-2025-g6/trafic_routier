@@ -21,15 +21,22 @@ def Stat_runLap(map: Map):
 	map.stats.sameUsed.run(map, Stat_countSameUsed)
 
 	map.stats.sumDist.run(map, Stat_countSumDist)
+
+	map.stats.maxSpeed.run(map, Stat_countMaxSpeed)
+	map.stats.avgSpeed.run(map, Stat_countAvgSpeed)
 	
+	map.stats.maxAcceleration.run(map, Stat_countMaxAcceleration)
+	map.stats.avgAcceleration.run(map, Stat_countAvgAcceleration)
+
+
 
 
 def Stat_onCarFinish(map: Map, car: Car):
-	if car.spawnLapCount < 0:
+	if car.stat_spawnLapCount < 0:
 		return
 	
 	car.finalTarget.finalTargetCarCount -= 1
-	map.stats.addTrajectDuration(map.lapCount - car.spawnLapCount)
+	map.stats.addTrajectDuration(map.lapCount - car.stat_spawnLapCount)
 
 
 
@@ -39,7 +46,7 @@ def Stat_countAngryCars(map: Map):
 	for car in map.cars:
 		if car.isAlive():
 			carCount += 1
-			if map.lapCount - car.spawnLapCount >= car.angryDuration:
+			if map.lapCount - car.stat_spawnLapCount >= car.stat_angryDuration:
 				count += 1
 	
 	if carCount == 0:
@@ -51,8 +58,8 @@ def Stat_countAngryCars(map: Map):
 def Stat_maxWait(map: Map):
 	bestWait = 0
 	for car in map.cars:
-		if car.isAlive() and car.spawnLapCount > 0:
-			w = map.lapCount - car.spawnLapCount
+		if car.isAlive() and car.stat_spawnLapCount > 0:
+			w = map.lapCount - car.stat_spawnLapCount
 			if w > bestWait:
 				bestWait = w
 	
@@ -66,7 +73,7 @@ def Stat_countWait(map: Map):
 	for car in map.cars:
 		if car.isAlive():
 			carCount += 1
-			count += map.lapCount - car.spawnLapCount
+			count += map.lapCount - car.stat_spawnLapCount
 	
 	if carCount == 0:
 		return 0
@@ -96,7 +103,7 @@ def Stat_countMostWaiting(map: Map):
 	for car in best.carsApproching:
 		if car.isAlive():
 			carCount += 1
-			count += map.lapCount - car.spawnLapCount
+			count += map.lapCount - car.stat_spawnLapCount
 	
 	if carCount == 0:
 		return 0
@@ -124,7 +131,7 @@ def Stat_countLeastWaiting(map: Map):
 	for car in best.carsApproching:
 		if car.isAlive():
 			carCount += 1
-			count += map.lapCount - car.spawnLapCount
+			count += map.lapCount - car.stat_spawnLapCount
 	
 	if carCount == 0:
 		return 0
@@ -141,7 +148,7 @@ def Stat_countSameWaiting(map: Map):
 	for car in best.carsApproching:
 		if car.isAlive():
 			carCount += 1
-			count += map.lapCount - car.spawnLapCount
+			count += map.lapCount - car.stat_spawnLapCount
 	
 	if carCount == 0:
 		return 0
@@ -186,24 +193,78 @@ def Stat_countSameUsed(map: Map):
 from math import sqrt
 
 def Stat_countSumDist(map: Map):
-	# cx = 600
-	# cy = 600
-
 	cx = 2.5 * 300
 	cy = 2.5 * 300
+
 
 	count = 0
 	carCount = 0
 	for car in map.cars:
 		if car.isAlive():
 			carCount += 1
-			x, y = car.getCoord()
+			x, y, _, _ = car.getCoord()
 			count += sqrt((x-cx)**2 + (y-cy)**2)
 	
 	if carCount == 0:
 		return 0
 	
 	return count / carCount
+
+
+
+def Stat_countMaxSpeed(map: Map):
+	best = 0
+	for car in map.cars:
+		if car.isAlive() and car.speed > best:
+			best = car.speed
+	
+	return best
+
+def Stat_countAvgSpeed(map: Map):
+	count = 0
+	carCount = 0
+	for car in map.cars:
+		if car.isAlive():
+			carCount += 1
+			count += car.speed
+	
+	if carCount == 0:
+		return 0
+	
+	return count / carCount
+
+
+
+def Stat_countMaxAcceleration(map: Map):
+	best = 0
+	for car in map.cars:
+		if car.isAlive() and car.stat_acceleration > best:
+			best = car.stat_acceleration
+	
+	return best / FRAME_LAPS
+
+
+def Stat_countAvgAcceleration(map: Map):
+	count = 0
+	carCount = 0
+	for car in map.cars:
+		if car.isAlive():
+			carCount += 1
+			count += car.stat_acceleration
+		
+		car.stat_acceleration = 0
+	
+
+	if carCount == 0:
+		return 0
+	
+	v = count / (carCount*FRAME_LAPS)
+	if v >= .00005:
+		return .00005
+
+	return v
+
+
 
 
 
@@ -223,7 +284,7 @@ def StatList_waitList(mapList: list[Map], dataList):
 		arr = []
 		map = mapList[i]
 		for car in map.cars:
-			arr.append(map.lapCount - car.spawnLapCount)
+			arr.append(map.lapCount - car.stat_spawnLapCount)
 
 		dataList[i] = arr
 
@@ -233,7 +294,7 @@ def StatList_waitListSorted(mapList: list[Map], dataList):
 		arr = []
 		map = mapList[i]
 		for car in map.cars:
-			bisect.insort(arr, map.lapCount - car.spawnLapCount)
+			bisect.insort(arr, map.lapCount - car.stat_spawnLapCount)
 
 		dataList[i] = arr
 
