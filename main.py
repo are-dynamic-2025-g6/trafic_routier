@@ -21,9 +21,7 @@ from math import sqrt, degrees, atan2
 
 from car import Car
 
-CAR_COUNT = 40
-
-
+CAR_COUNT = 16
 
 from Map import Map
 from stats import *
