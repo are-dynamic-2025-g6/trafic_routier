@@ -6,6 +6,8 @@ from car import *
 from priority import Priority
 import numpy as np
 
+import math
+
 
 TURN_DIST = 6
 
@@ -22,37 +24,23 @@ class SpawnPoint:
 
 
 
-pointsList = [
-	[
-		.5,
-
-		SpawnPoint("N0", 1100,  600, ["C0"]),
-		SpawnPoint("N1",  600,  100, ["C1"]),
-		SpawnPoint("N2",  100,  600, ["C2"]),
-		SpawnPoint("N3",  600, 1100, ["C3"]),
-
-		SpawnPoint("C0", 700, 500, ["C1" ,"N1"], 0, False),
-		SpawnPoint("C1", 500, 500, ["C2", "N2"], 0, False),
-		SpawnPoint("C2", 500, 700, ["C3", "N3"], 0, False),
-		SpawnPoint("C3", 700, 700, ["C0", "N0"], 0, False),
-	],
-
-]
 
 
 
+pointsList = [[
+ 	SpawnPoint("A1",  50, 50, ["B1"], 1, False),
+ 	SpawnPoint("A2",  50, 400, ["A1"]),
 
-# points = [
-# 	SpawnPoint("A1",  50, 50, ["B1"]),
-# 	SpawnPoint("A2",  50, 400, ["A1", "B2"]),
+ 	SpawnPoint("B1", 300, 50, ["C1", "B2"]),
+ 	SpawnPoint("B2", 250, 200, ["A2", "A1"]),
+ 	SpawnPoint("B3", 300, 400, ["A2", "B2"]),
 
-# 	SpawnPoint("B1", 300, 50, ["C1", "B2"]),
-# 	SpawnPoint("B2", 250, 200, ["A2", "A1"]),
-# 	SpawnPoint("B3", 300, 400, ["A2", "B2"], 3),
+ 	SpawnPoint("C1", 750, 50, ["C2"]),
+ 	SpawnPoint("C2", 750, 200, ["B3", "B2"]),
+ ]]
 
-# 	SpawnPoint("C1", 750, 50, ["C2"]),
-# 	SpawnPoint("C2", 750, 200, ["B3", "B2"]),
-# ]
+
+
 
 
 
@@ -182,6 +170,6 @@ def generateMap(points):
 
 			center.prios.append(arr)
 
-
+	print("Map generated!")
 	return intersections
 

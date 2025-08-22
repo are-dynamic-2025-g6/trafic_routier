@@ -1,1 +1,4 @@
-FRAME_LAPS = 100
+FRAME_LAPS = 25
+
+
+

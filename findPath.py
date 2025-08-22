@@ -8,8 +8,8 @@ from intersection import Intersection_getWeight
 def heuristic(a: Intersection, b: Intersection) -> float:
     return ((a.x - b.x) ** 2 + (a.y - b.y) ** 2) ** 0.5
 
+
 def findPath(start: Intersection, goal: Intersection) -> list[int]:
-    """Trouve le chemin optimal entre start et goal en retournant la liste des index des intersections dans targets."""
     open_set = []
     heapq.heappush(open_set, (0, random.random(), start))
     came_from = {}
@@ -20,7 +20,6 @@ def findPath(start: Intersection, goal: Intersection) -> list[int]:
         _, _, current = heapq.heappop(open_set)
         
         if current == goal:
-            # Reconstruction du chemin
             path = []
             while current in came_from:
                 prev, _, idx = came_from[current]
@@ -37,4 +36,4 @@ def findPath(start: Intersection, goal: Intersection) -> list[int]:
                 heapq.heappush(open_set, (f_score[neighbor], randSecurity, neighbor))
                 came_from[neighbor] = (current, randSecurity, idx)
     
-    return []  # Aucun chemin trouvé
+    return []
