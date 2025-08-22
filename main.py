@@ -21,7 +21,7 @@ from math import sqrt
 
 from car import Car
 
-CAR_COUNT = 5
+CAR_COUNT = 20
 
 
 from Map import Map
